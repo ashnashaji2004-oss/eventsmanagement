@@ -46,12 +46,14 @@ export default function LoginPage() {
       const data = err.response?.data;
       if (!err.response) {
         setError('Cannot connect to backend server. Please verify the backend API service is running.');
+      } else if (err.response.status === 404) {
+        setError('Backend API not found (404). The Django backend is not deployed at this URL. If on Vercel, please deploy the backend or configure VITE_API_BASE_URL.');
+      } else if (err.response.status === 500) {
+        setError('Backend server error (500). Please check Django backend logs.');
       } else if (data?.detail) {
         setError(data.detail);
       } else if (data?.non_field_errors) {
         setError(Array.isArray(data.non_field_errors) ? data.non_field_errors.join(' ') : String(data.non_field_errors));
-      } else if (typeof data === 'string' && data.length < 200) {
-        setError(`Server error (${err.response.status}): ${data}`);
       } else if (['binu', 'admin'].includes(username.trim().toLowerCase())) {
         setError('Invalid administrator credentials. Please check your password (default: Binu@123 or Admin@123).');
       } else {
