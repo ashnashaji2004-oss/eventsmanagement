@@ -42,14 +42,18 @@ export default function LoginPage() {
         navigate('/teacher/dashboard');
       }
     } catch (err) {
-      console.error(err);
-      const detail = err.response?.data?.detail;
+      console.error('Login error:', err);
+      const data = err.response?.data;
       if (!err.response) {
-        setError('Cannot connect to backend server. Please verify the Django server is running on http://127.0.0.1:8000.');
-      } else if (detail) {
-        setError(detail);
-      } else if (username.trim().toLowerCase() === 'admin') {
-        setError('Invalid administrator credentials. Please check your password.');
+        setError('Cannot connect to backend server. Please verify the backend API service is running.');
+      } else if (data?.detail) {
+        setError(data.detail);
+      } else if (data?.non_field_errors) {
+        setError(Array.isArray(data.non_field_errors) ? data.non_field_errors.join(' ') : String(data.non_field_errors));
+      } else if (typeof data === 'string' && data.length < 200) {
+        setError(`Server error (${err.response.status}): ${data}`);
+      } else if (['binu', 'admin'].includes(username.trim().toLowerCase())) {
+        setError('Invalid administrator credentials. Please check your password (default: Binu@123 or Admin@123).');
       } else {
         setError('Invalid username or password. (Note: Newly registered Teachers and Parents require Administrator approval).');
       }
