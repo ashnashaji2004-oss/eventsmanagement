@@ -14,7 +14,8 @@ import {
   Search,
   Filter,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Tag
 } from 'lucide-react';
 
 export default function AdminEvents() {
@@ -287,8 +288,12 @@ export default function AdminEvents() {
                             {ev.name_ml}
                           </span>
                         )}
-                        <span className="text-[10px] text-indigo-700 font-semibold">
+                        <span className="text-[10px] text-indigo-700 font-semibold block">
                           Coord: {ev.coordinating_teacher_name || 'Not assigned'}
+                        </span>
+                        <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                          <Tag className="w-2.5 h-2.5" />
+                          {ev.category_name || 'Uncategorized'}
                         </span>
                       </td>
 
@@ -367,7 +372,7 @@ export default function AdminEvents() {
 
                         <button
                           type="button"
-                          onClick={() => setEventModal({ open: false, isNew: false, data: { ...ev } })}
+                          onClick={() => setEventModal({ open: true, isNew: false, data: { ...ev } })}
                           className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs"
                         >
                           Edit

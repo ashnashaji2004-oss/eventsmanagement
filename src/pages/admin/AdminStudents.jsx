@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import api from '../../services/api';
+import api, { API_BASE_URL } from '../../services/api';
 import HouseBadge from '../../components/HouseBadge';
 import {
   GraduationCap,
@@ -87,7 +87,7 @@ export default function AdminStudents() {
 
   // Export CSV
   const handleExportCsv = () => {
-    window.open('/api/students/export_csv/', '_blank');
+    window.open(`${API_BASE_URL}/students/export_csv/`, '_blank');
   };
 
   return (

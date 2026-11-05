@@ -12,7 +12,8 @@ import {
   Users,
   Award,
   ChevronDown,
-  Info
+  Info,
+  Tag
 } from 'lucide-react';
 
 export default function EventsPage() {
@@ -161,6 +162,11 @@ export default function EventsPage() {
 
                   {/* Event Details metadata */}
                   <div className="space-y-2 pt-3 border-t border-slate-100 text-xs text-slate-600">
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                      <span>Category: <strong className="text-slate-800">{i18n.language === 'ml' && ev.category_name_ml ? ev.category_name_ml : (ev.category_name || 'General')}</strong></span>
+                    </div>
+
                     <div className="flex items-center gap-2">
                       <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       <span className="truncate">{ev.venue}</span>

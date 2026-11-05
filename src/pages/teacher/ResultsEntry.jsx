@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import api from '../../services/api';
+import api, { API_BASE_URL } from '../../services/api';
 import HouseBadge from '../../components/HouseBadge';
 import {
   Award,
@@ -104,7 +104,7 @@ export default function ResultsEntry() {
 
   const handleExportResults = () => {
     if (!selectedEventId) return;
-    window.open(`/api/reports/events/${selectedEventId}/export/`, '_blank');
+    window.open(`${API_BASE_URL}/reports/events/${selectedEventId}/export/`, '_blank');
   };
 
   return (

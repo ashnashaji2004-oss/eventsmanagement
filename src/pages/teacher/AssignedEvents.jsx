@@ -8,7 +8,8 @@ import {
   Award,
   MapPin,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Tag
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -73,6 +74,10 @@ export default function AssignedEvents() {
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-500 pt-2 border-t border-slate-100">
+                  <div className="flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Category: <strong className="text-slate-700">{ev.category_name || 'General'}</strong></span>
+                  </div>
                   <div className="flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-slate-400" />
                     <span>{ev.venue}</span>

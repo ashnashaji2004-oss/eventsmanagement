@@ -20,7 +20,12 @@ import {
   RefreshCw,
   Info,
   Check,
-  Building
+  Building,
+  UserCog,
+  Key,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export default function AdminSettings() {
@@ -87,12 +92,44 @@ export default function AdminSettings() {
     setLoading(true);
     api.get('/settings/')
       .then((res) => {
-        if (res.data) {
-          setSettings((prev) => ({ ...prev, ...res.data }));
+        const data = Array.isArray(res.data) ? res.data[0] : (res.data?.results ? res.data.results[0] : res.data);
+        if (data) {
+          setSettings((prev) => ({ ...prev, ...data }));
         }
       })
-      .catch((err) => console.error('Error fetching settings:', err))
+      .catch((err) => {
+        console.error('Error fetching settings:', err);
+      })
       .finally(() => setLoading(false));
+  };
+
+  const handleCredSubmit = async (e) => {
+    e.preventDefault();
+    setCredLoading(true);
+    setCredSuccess('');
+    setCredErrors({});
+
+    if (credForm.new_password && credForm.new_password !== credForm.confirm_password) {
+      setCredErrors({ confirm_password: 'Passwords do not match.' });
+      setCredLoading(false);
+      return;
+    }
+
+    try {
+      const res = await api.post('/auth/change-credentials/', credForm);
+      setCredSuccess(res.data.detail || 'Credentials updated successfully.');
+      setCredForm({ current_password: '', new_username: '', new_password: '', confirm_password: '' });
+      setTimeout(() => setCredSuccess(''), 5000);
+    } catch (err) {
+      const errData = err.response?.data;
+      if (typeof errData === 'object' && errData !== null) {
+        setCredErrors(errData);
+      } else {
+        setCredErrors({ detail: 'Failed to update credentials. Please check your current password.' });
+      }
+    } finally {
+      setCredLoading(false);
+    }
   };
 
   const fetchAcademicYears = () => {
@@ -433,38 +470,48 @@ export default function AdminSettings() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {academicYears.map((yr) => (
-                  <tr key={yr.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-slate-900 flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-slate-400" />
-                      {yr.name}
-                    </td>
-                    <td className="px-6 py-4">
-                      {yr.is_current ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          Active Session
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                          Archived
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-xs text-slate-500">{yr.start_date || 'N/A'}</td>
-                    <td className="px-6 py-4 text-xs text-slate-500">{yr.end_date || 'N/A'}</td>
-                    <td className="px-6 py-4 text-right">
-                      {!yr.is_current && (
-                        <button
-                          onClick={() => handleSetActiveYear(yr.id)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors"
-                        >
-                          Set as Active Session
-                        </button>
-                      )}
+                {academicYears.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-12 text-center text-slate-400">
+                      <Calendar className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                      <p className="font-semibold text-slate-600">No academic years configured</p>
+                      <p className="text-xs text-slate-400 mt-0.5">Click "Add Academic Year" to create a new session.</p>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  academicYears.map((yr) => (
+                    <tr key={yr.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-slate-900 flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-slate-400" />
+                        {yr.name}
+                      </td>
+                      <td className="px-6 py-4">
+                        {yr.is_current ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            Active Session
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                            Archived
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-xs text-slate-500">{yr.start_date || 'N/A'}</td>
+                      <td className="px-6 py-4 text-xs text-slate-500">{yr.end_date || 'N/A'}</td>
+                      <td className="px-6 py-4 text-right">
+                        {!yr.is_current && (
+                          <button
+                            onClick={() => handleSetActiveYear(yr.id)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors"
+                          >
+                            Set as Active Session
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -754,6 +801,147 @@ export default function AdminSettings() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* TAB 5: Account Security */}
+      {activeTab === 'security' && (
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+            <div className="p-2.5 rounded-xl bg-rose-50 text-rose-700">
+              <UserCog className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Administrator Account Security</h2>
+              <p className="text-xs text-slate-500">Update your administrator username and password</p>
+            </div>
+          </div>
+
+          {credSuccess && (
+            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+              {credSuccess}
+            </div>
+          )}
+
+          {credErrors.detail && (
+            <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+              {credErrors.detail}
+            </div>
+          )}
+
+          <form onSubmit={handleCredSubmit} className="space-y-5 max-w-xl">
+            {/* Current Password */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Current Password <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type={showCurrPwd ? 'text' : 'password'}
+                  value={credForm.current_password}
+                  onChange={(e) => setCredForm({ ...credForm, current_password: e.target.value })}
+                  placeholder="Enter current password to authorize changes"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrPwd(!showCurrPwd)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showCurrPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {credErrors.current_password && (
+                <p className="text-xs text-rose-600 mt-1">{credErrors.current_password}</p>
+              )}
+            </div>
+
+            {/* New Username */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                New Username (Optional)
+              </label>
+              <input
+                type="text"
+                value={credForm.new_username}
+                onChange={(e) => setCredForm({ ...credForm, new_username: e.target.value })}
+                placeholder="Leave blank to keep existing username"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white"
+              />
+              {credErrors.new_username && (
+                <p className="text-xs text-rose-600 mt-1">{credErrors.new_username}</p>
+              )}
+            </div>
+
+            {/* New Password */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                New Password (Optional)
+              </label>
+              <div className="relative">
+                <input
+                  type={showNewPwd ? 'text' : 'password'}
+                  value={credForm.new_password}
+                  onChange={(e) => setCredForm({ ...credForm, new_password: e.target.value })}
+                  placeholder="Enter new password (min. 6 characters)"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPwd(!showNewPwd)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showNewPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {credErrors.new_password && (
+                <p className="text-xs text-rose-600 mt-1">{credErrors.new_password}</p>
+              )}
+            </div>
+
+            {/* Confirm New Password */}
+            {credForm.new_password && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Confirm New Password <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfPwd ? 'text' : 'password'}
+                    value={credForm.confirm_password}
+                    onChange={(e) => setCredForm({ ...credForm, confirm_password: e.target.value })}
+                    placeholder="Repeat new password"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white pr-10"
+                    required={!!credForm.new_password}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfPwd(!showConfPwd)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showConfPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {credErrors.confirm_password && (
+                  <p className="text-xs text-rose-600 mt-1">{credErrors.confirm_password}</p>
+                )}
+              </div>
+            )}
+
+            <div className="pt-4 border-t border-slate-200">
+              <button
+                type="submit"
+                disabled={credLoading}
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold shadow-sm transition-colors disabled:opacity-50"
+              >
+                {credLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Update Account Credentials
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

@@ -16,7 +16,8 @@ import {
   Flame,
   ShieldCheck,
   MapPin,
-  Clock
+  Clock,
+  Tag
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -254,14 +255,20 @@ export default function HomePage() {
                   {i18n.language === 'ml' && ev.description_ml ? ev.description_ml : ev.description}
                 </p>
 
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 pt-2 border-t border-slate-100">
+                <div className="space-y-1.5 text-xs text-slate-500 pt-2 border-t border-slate-100">
                   <div className="flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="truncate">{ev.venue}</span>
+                    <Tag className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                    <span>Category: <strong className="text-slate-700">{i18n.language === 'ml' && ev.category_name_ml ? ev.category_name_ml : (ev.category_name || 'General')}</strong></span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{ev.event_date} ({ev.start_time?.slice(0, 5)})</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="truncate">{ev.venue}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{ev.event_date} ({ev.start_time?.slice(0, 5)})</span>
+                    </div>
                   </div>
                 </div>
               </div>
